@@ -1,3 +1,10 @@
+/*
+PROBLEMS:
+Cubes not showing up
+Fog not visible
+new cube is position always zero
+*/
+
 var Direction = 
 {
 	NORTH: 0,
@@ -128,20 +135,20 @@ function animate()
 
 function updateSnake()
 {
-	if ((timeSinceLastSnakeUpdate += delta) >= 500.0)
+	if ((timeSinceLastSnakeUpdate += delta) >= 0.7)
 	{
-		console.log("hit");
 		timeSinceLastSnakeUpdate = 0.0;
 
-		var newPos = (snake[0].position.clone()).add(direction);
+		var newPos = snake[0].position.clone().add( direction );
 
 		
 		//if (food.position.equals(newPos)) // Pick up food, grow
 		//{
+			// part position is always zero, while newpos is not
 			score++;
 			var part = snake[0].clone();
 			part.position = newPos;
-			snake.push( part );
+			snake.unshift( part );
 			scene.add( part );
 		/*}
 		else
@@ -153,7 +160,13 @@ function updateSnake()
 			snake.unshift( last );
 		}*/
 
-		//camera.position = newPos;
+		camera.position = newPos;
+		
+		console.log( direction );
+		console.log( camera );
+		console.log( newPos );
+		console.log( part );
+		console.log( snake );
 	}
 }
 
