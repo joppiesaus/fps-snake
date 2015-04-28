@@ -1,9 +1,31 @@
 /*
 PROBLEMS:
-Cubes not showing up
-Fog not visible
 new cube is position always zero
+implement!!!
 */
+
+var Position = function(x, y)
+{
+    this.x = x;
+    this.y = y;
+}
+
+var Position.prototype.add = function(a)
+{
+    this.x = a.x;
+    this.y = a.y;
+};
+
+var Position.prototype.isFree = function()
+{
+    return grid[this.x][this.y] === false;
+};
+
+var Position.prototype.toWorldVector = function()
+{
+    return new THREE.Vector3( this.x * CUBE_SIZE, 0, this.y * CUBE_SIZE );
+}
+
 
 var Direction = 
 {
@@ -14,10 +36,10 @@ var Direction =
 }
 
 // Returns an int >= 0 && < max
-var randomInt = function(max)
+/*var randomInt = function(max)
 {
 	return Math.floor(Math.random() * max);
-}
+}*/
 // Returns an int >= min && < max
 var randomInt = function(min, max)
 {
@@ -29,12 +51,13 @@ var scene, camera, renderer, clock;
 var CubeGeometry, CubeMaterial;
 var FoodMesh;
 
-var FIELD_SIZE = 100;
+var FIELD_SIZE = 10;
 var CUBE_SIZE = 10;
 
 var delta;
 var direction;
 var snake = [];
+var grid = [];
 var food;
 
 var delta;
@@ -42,8 +65,8 @@ var timeSinceLastSnakeUpdate = 0.0;
 
 function init()
 {
-
-	window.addEventListener('resize', onWindowResize, false);
+    
+	window.addEventListener( 'resize', onWindowResize, false );
 
 	clock = new THREE.Clock();
 	
@@ -64,28 +87,46 @@ function init()
 	//cube.position.y = 150;
 	scene.add( cube );
 	
-	var gridHelper = new THREE.GridHelper( FIELD_SIZE, CUBE_SIZE );
+	var gridHelper = new THREE.GridHelper( FIELD_SIZE * CUBE_SIZE, CUBE_SIZE );
 	scene.add( gridHelper );
 
 	snake.push( new THREE.Mesh( CubeGeometry, CubeMaterial ) );
-	
+	snake[0].pos = new Position( 0, 0 );
+        
+        snake.dir = new Position( 1, 0 );
+        
 	scene.add( snake[0] );
 	
 	// camera
-	camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 1, 10000 );
+	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
 	//camera.position = new THREE.Vector3(0, 1000, 0);
 	camera.position.z = -100;
 	camera.position.y = 200;
 	camera.position.x = 200;
-
+        
+        for (var i = 0; i < FIELD_SIZE; i++)
+        {
+                grid[i] = [];
+                for (var j = 0; j < FIELD_SIZE; j++)
+                {
+                        grid[i][j] = false;
+                }
+        }
+        
 	//camera.lookAt( snake[0].position );
 	camera.lookAt( scene.position );
 	scene.add( camera );
 	
 	changeDirection( Direction.NORTH );
 
-	addFood();	
-	
+        food = new THREE.Mesh(
+                new THREE.CubeGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ),
+		new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
+            );
+	addFood();
+	scene.add( food );
+        
+        
 	document.body.appendChild( renderer.domElement );
 	
 	clock.start();
@@ -94,12 +135,15 @@ function init()
 
 function addFood()
 {
-	// TODO: Implement
-	cube = new THREE.Mesh(
-			new THREE.CubeGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ),
-			new THREE.MeshLambertMaterial( { color: 0x00ff00, opacity: 0.7, transparent: true} ) );
-	cube.position.set(20, 0, 50);
-	scene.add( cube );
+        var pos;
+        
+        do
+        {
+            pos = new Position( randomInt( 0, FIELD_SIZE ), randomInt( 0, FIELD_SIZE ) );
+        }
+        while (!pos.isFree());
+        
+        food.position.set(pos);
 }
 
 function changeDirection( dir )
@@ -158,34 +202,6 @@ function updateSnake()
 	if ((timeSinceLastSnakeUpdate += delta) >= 0.7)
 	{
 		timeSinceLastSnakeUpdate = 0.0;
-
-		var newPos = snake[0].position.clone().add( direction );
-		
-		//if (food.position.equals(newPos)) // Pick up food, grow
-		//{
-			// part position is always zero, while newpos is not
-			score++;
-			var part = snake[0].clone();
-			part.position = newPos;
-			snake.unshift( part );
-			scene.add( part );
-		/*}
-		else
-		{
-			var lastn = snake.length - 1;
-			var last = snake[lastn];
-			last.position = newPos;
-			snake.pop();
-			snake.unshift( last );
-		}*/
-
-		//camera.position = newPos;
-		
-		//console.log( direction );
-		//console.log( camera );
-		console.log( newPos );
-		//console.log( part );
-		//console.log( snake );
 	}
 }
 
