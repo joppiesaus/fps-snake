@@ -29,8 +29,8 @@ var scene, camera, renderer, clock;
 var CubeGeometry, CubeMaterial;
 var FoodMesh;
 
-var SIZE = 20;
-var CUBE_SIZE = 2;
+var FIELD_SIZE = 100;
+var CUBE_SIZE = 10;
 
 var delta;
 var direction;
@@ -42,6 +42,9 @@ var timeSinceLastSnakeUpdate = 0.0;
 
 function init()
 {
+
+	window.addEventListener('resize', onWindowResize, false);
+
 	clock = new THREE.Clock();
 	
 	scene = new THREE.Scene();
@@ -49,22 +52,35 @@ function init()
 	
 	CubeGeometry = new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE );
 	CubeMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+
+	var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+	scene.add( light );
+
+	renderer = new THREE.WebGLRenderer({ });
+	renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
+	renderer.setClearColor(0xf0f0f0);
+
+	cube = new THREE.Mesh( new THREE.CubeGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ), new THREE.MeshNormalMaterial() );
+	//cube.position.y = 150;
+	scene.add( cube );
 	
-	camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 1, 10000 );
-	
-	renderer = new THREE.WebGLRenderer();
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.setClearColor( 0x131313, 1.0 );
-	
-	scene.add( camera );
-	
+	var gridHelper = new THREE.GridHelper( FIELD_SIZE, CUBE_SIZE );
+	scene.add( gridHelper );
+
 	snake.push( new THREE.Mesh( CubeGeometry, CubeMaterial ) );
 	
 	scene.add( snake[0] );
 	
-	camera.position = new THREE.Vector3(10, 10, 10);
-	camera.lookAt( snake[0].position );
-	//camera.lookAt( scene.position );
+	// camera
+	camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 1, 10000 );
+	//camera.position = new THREE.Vector3(0, 1000, 0);
+	camera.position.z = -100;
+	camera.position.y = 200;
+	camera.position.x = 200;
+
+	//camera.lookAt( snake[0].position );
+	camera.lookAt( scene.position );
+	scene.add( camera );
 	
 	changeDirection( Direction.NORTH );
 
@@ -74,12 +90,16 @@ function init()
 	
 	clock.start();
 	
-	animate();
 }
 
 function addFood()
 {
 	// TODO: Implement
+	cube = new THREE.Mesh(
+			new THREE.CubeGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ),
+			new THREE.MeshLambertMaterial( { color: 0x00ff00, opacity: 0.7, transparent: true} ) );
+	cube.position.set(20, 0, 50);
+	scene.add( cube );
 }
 
 function changeDirection( dir )
@@ -140,7 +160,6 @@ function updateSnake()
 		timeSinceLastSnakeUpdate = 0.0;
 
 		var newPos = snake[0].position.clone().add( direction );
-
 		
 		//if (food.position.equals(newPos)) // Pick up food, grow
 		//{
@@ -160,14 +179,16 @@ function updateSnake()
 			snake.unshift( last );
 		}*/
 
-		camera.position = newPos;
+		//camera.position = newPos;
 		
-		console.log( direction );
-		console.log( camera );
+		//console.log( direction );
+		//console.log( camera );
 		console.log( newPos );
-		console.log( part );
-		console.log( snake );
+		//console.log( part );
+		//console.log( snake );
 	}
 }
 
-window.onload = init;
+window.onload = init();
+
+animate();
