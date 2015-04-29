@@ -1,6 +1,8 @@
 /*
-PROBLEMS:
-Implement everything!!!
+TODO:
+# Add out of range logic
+# Do first person stuff
+# Fix "black cube" problem
 */
 
 // An int vector2, point.
@@ -15,6 +17,13 @@ Position.prototype.add = function(a)
 {
     this.x = a.x;
     this.y = a.y;
+};
+Position.prototype.added = function(a)
+{
+	return new Position(
+		this.x + a.x,
+		this.y + a.y
+	);
 };
 
 // Returns true if free, otherwise occupied
@@ -64,6 +73,13 @@ var food;
 
 var delta;
 var timeSinceLastSnakeUpdate = 0.0;
+
+// Nope, no JQuery today.
+// Returns an element based on id(a macro)
+function $( id )
+{
+	return document.getElementById( id );
+}
 
 function init()
 {
@@ -132,6 +148,8 @@ function init()
 	document.body.appendChild( renderer.domElement );
 	
 	clock.start();
+	
+	animate();
 }
 
 function addFood()
@@ -206,7 +224,7 @@ function onKeyDown( e )
 			changeDirection( Direction.WEST );
 			break;
 		
-		case 30: // right
+		case 39: // right
 		case 68: // d
 			changeDirection( Direction.EAST );
 			break;
@@ -245,24 +263,36 @@ function updateSnake()
 	{
 		timeSinceLastSnakeUpdate = 0.0;
 		
-		var newPos;
+		var newPos = snake[0].pos.added( snake.dir );
 		
-		switch (newPos)
+		switch (grid[newPos.x][newPos.y])
 		{
-			case EMPTY: // Move
-				
+			case GridState.EMPTY: // Move
+				var last = snake[snake.length - 1];
+				grid[last.pos.x][last.pos.y] = GridState.EMPTY;
+				changeSnakePart( last, newPos );
+				snake.pop();
+				snake.unshift( last );
 				break;
 			
-			case SNAKE: // Die
+			case GridState.SNAKE: // Die
 			
 				break;
 			
-			case FOOD: // Grow
+			case GridState.FOOD: // Grow
 				
-				score++;
+				var last = snake[snake.length - 1].clone();
+				changeSnakePart( last, newPos );
+				scene.add( last );
+				snake.unshift( last );
+				
+				addScore();
+				addFood();
 			
 				break;
 		}
+		
+		camera.lookAt( snake[0].position );
 		
 	}
 }
@@ -270,9 +300,16 @@ function updateSnake()
 // Changes a snake segment/body/part position
 function changeSnakePart(seg, pos)
 {
-	
+	seg.pos = pos;
+	grid[pos.x][pos.y] = GridState.SNAKE;
+	pos = pos.toWorldVector();
+	seg.position.set( pos.x, pos.y, pos.z );
+}
+
+// Adds 1 to the score, and also updates HUD.
+function addScore()
+{
+	$( "score" ).innerHTML = "Score: " + ++score;
 }
 
 window.onload = init;
-
-animate();
