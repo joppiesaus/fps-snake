@@ -1,8 +1,7 @@
 /*
 TODO:
-# Add out of range logic
 # Do first person stuff
-# Fix "black cube" problem
+# Implement gameover & reset
 */
 
 // An int vector2, point.
@@ -10,6 +9,13 @@ var Position = function(x, y)
 {
     this.x = x;
     this.y = y;
+};
+
+// Adjusts this position to the field ones(so it's always in bounds)
+Position.prototype.adjustToField = function()
+{
+	this.x = this.x % FIELD_SIZE;
+	this.y = this.y % FIELD_SIZE;
 };
 
 // Adds another Position to this position
@@ -93,18 +99,14 @@ function init()
 	scene.fog = new THREE.Fog( 0x0000aa, 10, 1000 );
 	
 	var BoxGeometry = new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE );
-	var CubeMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+	var CubeMaterial = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
 
-	var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+	var light = new THREE.AmbientLight( /*0x404040*/ 0x919191 ); // soft white light
 	scene.add( light );
 
 	renderer = new THREE.WebGLRenderer(/*{ antialias:true }*/);
 	renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
 	renderer.setClearColor(0xf0f0f0);
-
-	cube = new THREE.Mesh( new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ), new THREE.MeshNormalMaterial() );
-	//cube.position.y = 150;
-	scene.add( cube );
 	
 	var gridHelper = new THREE.GridHelper( FIELD_SIZE * CUBE_SIZE, CUBE_SIZE );
 	scene.add( gridHelper );
@@ -126,13 +128,10 @@ function init()
 	
 	// camera
 	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
-	//camera.position = new THREE.Vector3(0, 100, 0);
 	camera.position.z = -80;
 	camera.position.y = 120;
 	camera.position.x = 120;
     
-    
-	//camera.lookAt( snake[0].position );
 	camera.lookAt( scene.position );
 	scene.add( camera );
 	
@@ -172,12 +171,9 @@ function addFood()
 
 function changeDirection( dir )
 {
-	//var TAU = 6.2831853071;
-	
 	switch (dir)
 	{
 		case Direction.NORTH:
-			//camera.makeRotationY(
 			snake.dir = new Position( 1, 0 );
 			break;
 			
@@ -233,10 +229,9 @@ function onKeyDown( e )
 
 function onKeyUp( e )
 {
-	switch (e.keyCode)
+	/*switch (e.keyCode)
 	{
-		
-	}
+	}*/
 }
 
 function update()
@@ -263,7 +258,9 @@ function updateSnake()
 	{
 		timeSinceLastSnakeUpdate = 0.0;
 		
-		var newPos = snake[0].pos.added( snake.dir );
+		var prevPos = snake[0].pos;
+		var newPos = prevPos.added( snake.dir );
+		newPos.adjustToField();
 		
 		switch (grid[newPos.x][newPos.y])
 		{
@@ -276,7 +273,9 @@ function updateSnake()
 				break;
 			
 			case GridState.SNAKE: // Die
-			
+				
+				// TODO: Gameover/reset
+				
 				break;
 			
 			case GridState.FOOD: // Grow
@@ -292,9 +291,20 @@ function updateSnake()
 				break;
 		}
 		
-		camera.lookAt( snake[0].position );
-		
+		updateCamera();
 	}
+}
+
+// Updates the camera position and matrix based on the snake's head
+function updateCamera()
+{
+	var pos = snake[0].position.clone();
+	
+	// TODO: Implement better
+	// Should be based on direction
+	
+	camera.lookAt( pos );
+	camera.position.set( pos.x, pos.y, pos.z );
 }
 
 // Changes a snake segment/body/part position
