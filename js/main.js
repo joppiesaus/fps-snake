@@ -1,7 +1,11 @@
 /*
 TODO:
-# Do first person stuff
+# Walls!
+	[] Act like screens?
+# Find replacement for ugly wireframe
+
 # Implement gameover & reset
+# Fix double left/right bug (causes to run into itself)
 */
 
 // An int vector2, point.
@@ -9,13 +13,6 @@ var Position = function(x, y)
 {
     this.x = x;
     this.y = y;
-};
-
-// Adjusts this position to the field ones(so it's always in bounds)
-Position.prototype.adjustToField = function()
-{
-	this.x = this.x % FIELD_SIZE;
-	this.y = this.y % FIELD_SIZE;
 };
 
 // Adds another Position to this position
@@ -47,11 +44,14 @@ Position.prototype.toWorldVector = function()
 
 var Direction = 
 {
+	// Turns out the default orientation is much more easy to work with
 	NORTH: 0,
-	SOUTH: 1,
-	WEST: 2,
-	EAST: 3,
+	EAST:  1,
+	SOUTH: 2,
+	WEST:  3
 };
+
+// State of a grid cell.
 var GridState =
 {
 	EMPTY: 0,
@@ -69,8 +69,9 @@ var randomInt = function(min, max)
 var score = 0;
 var scene, camera, renderer, clock;
 
-var FIELD_SIZE = 30;
+var FIELD_SIZE = 10;
 var CUBE_SIZE = 10;
+var CAMERA_HEAD_Y_OFFSET = 11;
 
 var delta; // time since last update in seconds
 var snake = []; // snake body parts in meshes with an Position, for the grid
@@ -91,7 +92,6 @@ function init()
 {
 	window.addEventListener  ( 'resize' , onWindowResize, false );
 	document.addEventListener( 'keydown', onKeyDown, false );
-	document.addEventListener( 'keyup'  , onKeyUp, false );
 	
 	clock = new THREE.Clock();
 	
@@ -108,9 +108,10 @@ function init()
 	renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
 	renderer.setClearColor(0xf0f0f0);
 	
-	var gridHelper = new THREE.GridHelper( FIELD_SIZE * CUBE_SIZE, CUBE_SIZE );
-	scene.add( gridHelper );
+	//var gridHelper = new THREE.GridHelper( FIELD_SIZE * CUBE_SIZE, CUBE_SIZE );
+	//scene.add( gridHelper );
 
+	// Init field
 	for (var i = 0; i < FIELD_SIZE; i++)
     {
         grid[i] = [];
@@ -120,25 +121,22 @@ function init()
 		}
     }
 	
+	// camera
+	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
+	camera.position.y = CAMERA_HEAD_Y_OFFSET;
+	scene.add( camera );
+
 	snake.push( new THREE.Mesh( BoxGeometry, CubeMaterial ) );
 	snake[0].pos = new Position( 0, 0 );
 	grid[0][0] = GridState.SNAKE;
-    snake.dir = new Position( 1, 0 );
+	snake.literaldir = Direction.NORTH;
+	updateDirection();
 	scene.add( snake[0] );
 	
-	// camera
-	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.z = -80;
-	camera.position.y = 120;
-	camera.position.x = 120;
-    
-	camera.lookAt( scene.position );
-	scene.add( camera );
-	
-	changeDirection( Direction.NORTH );
+	addScore();
 	
     food = new THREE.Mesh(
-			new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE ),
+			BoxGeometry,
 			new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
     );
 	addFood();
@@ -169,24 +167,54 @@ function addFood()
     food.position.set( pos.x, pos.y, pos.z ); // .set doesn't work with a Vector3
 }
 
-function changeDirection( dir )
+// changes literaldir relatively
+function changeRelativeDirection( dir )
 {
-	switch (dir)
+	if (dir == Direction.EAST)
+	{
+		// Turn right
+		if (++snake.literaldir > 3)
+		{
+			snake.literaldir = 0;
+		}
+	}
+	else // --> West
+	{
+		// Turn left
+		if (--snake.literaldir < 0)
+		{
+			snake.literaldir = 3;
+		}
+	}
+	
+	updateDirection();
+}
+
+// Updates the camera and "velocity" based on snake.literaldir
+function updateDirection()
+{
+	var TAU = 6.2831853071; // pi u suk go search friends lel
+
+	switch (snake.literaldir)
 	{
 		case Direction.NORTH:
-			snake.dir = new Position( 1, 0 );
-			break;
-			
-		case Direction.SOUTH:
-			snake.dir = new Position( -1, 0 );
-			break;
-		
-		case Direction.WEST:
+			camera.rotation.y = TAU / 2;
 			snake.dir = new Position( 0, 1 );
 			break;
 			
-		case Direction.EAST:
+		case Direction.SOUTH:
+			camera.rotation.y = 0;
 			snake.dir = new Position( 0, -1 );
+			break;
+		
+		case Direction.WEST:
+			camera.rotation.y = TAU / 4;
+			snake.dir = new Position( -1, 0 );
+			break;
+			
+		case Direction.EAST:
+			camera.rotation.y = TAU * 3 / 4;
+			snake.dir = new Position( 1, 0 );
 			break;
 	}
 }
@@ -207,31 +235,22 @@ function onKeyDown( e )
 	{
 		case 38: // up
 		case 87: // w
-			changeDirection( Direction.NORTH );
-			break;
-			
-		case 40: // down
-		case 83: // s
-			changeDirection( Direction.SOUTH );
+			// Dear javascript,
+			// I really hate that I can't check if a key is down manually or not.
+			// This is a crap method.
+			timeSinceLastSnakeUpdate += 25 * delta;
 			break;
 		
 		case 37: // left
 		case 65: // a
-			changeDirection( Direction.WEST );
+			changeRelativeDirection( Direction.EAST );
 			break;
 		
 		case 39: // right
 		case 68: // d
-			changeDirection( Direction.EAST );
+			changeRelativeDirection( Direction.WEST );
 			break;
 	}
-}
-
-function onKeyUp( e )
-{
-	/*switch (e.keyCode)
-	{
-	}*/
 }
 
 function update()
@@ -260,7 +279,7 @@ function updateSnake()
 		
 		var prevPos = snake[0].pos;
 		var newPos = prevPos.added( snake.dir );
-		newPos.adjustToField();
+		adjustToField( newPos );
 		
 		switch (grid[newPos.x][newPos.y])
 		{
@@ -291,29 +310,51 @@ function updateSnake()
 				break;
 		}
 		
-		updateCamera();
+		camera.position.set(
+			snake[0].position.x,
+			snake[0].position.y + CAMERA_HEAD_Y_OFFSET, // Always equal to camheadyoff
+			snake[0].position.z
+		);
 	}
 }
 
-// Updates the camera position and matrix based on the snake's head
-function updateCamera()
-{
-	var pos = snake[0].position.clone();
-	
-	// TODO: Implement better
-	// Should be based on direction
-	
-	camera.lookAt( pos );
-	camera.position.set( pos.x, pos.y, pos.z );
-}
-
 // Changes a snake segment/body/part position
-function changeSnakePart(seg, pos)
+function changeSnakePart( seg, pos )
 {
 	seg.pos = pos;
 	grid[pos.x][pos.y] = GridState.SNAKE;
 	pos = pos.toWorldVector();
 	seg.position.set( pos.x, pos.y, pos.z );
+}
+
+// Adjusts this snake's position to the field ones, and inversing directions with it too
+function adjustToField( pos )
+{
+	// Can't use modulo, javascript math sucks
+	if (pos.x < 0)
+	{
+		pos.x = FIELD_SIZE - 1;
+		snake.literaldir = Direction.WEST;
+		updateDirection();
+	}
+	else if (pos.x >= FIELD_SIZE)
+	{
+		pos.x = 0;
+		snake.literaldir = Direction.EAST;
+		updateDirection();
+	}
+	if (pos.y < 0)
+	{
+		pos.y = FIELD_SIZE - 1;
+		snake.literaldir = Direction.SOUTH;
+		updateDirection();
+	}
+	else if (pos.y >= FIELD_SIZE)
+	{
+		pos.y = 0;
+		snake.literaldir = Direction.NORTH;
+		updateDirection();
+	}
 }
 
 // Adds 1 to the score, and also updates HUD.
