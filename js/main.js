@@ -124,9 +124,17 @@ function init()
 		}
 	}
 	
+	// walls
+	var walls = new THREE.Mesh(
+			new THREE.BoxGeometry( FIELD_SIZE * CUBE_SIZE, FIELD_SIZE * CUBE_SIZE, FIELD_SIZE * CUBE_SIZE ),
+			new THREE.MeshLambertMaterial( { color: 0x0000ff, wireframe: true} )
+		)
+	walls.position.set( FIELD_SIZE * CUBE_SIZE / 2, FIELD_SIZE * CUBE_SIZE / 2, FIELD_SIZE * CUBE_SIZE / 2 );
+	scene.add( walls );
+	
+	
 	// camera
 	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.y = CAMERA_HEAD_Y_OFFSET;
 	scene.add( camera );
 
 	food = new THREE.Mesh(
@@ -145,7 +153,7 @@ function init()
 }
 
 function resetSnake()
-{
+{	
 	for (var i = 0; i < FIELD_SIZE; i++)
 	{
 		for (var j = 0; j < FIELD_SIZE; j++)
@@ -154,6 +162,7 @@ function resetSnake()
 		}
 	}
 	
+	delta = 0.0;
 	score = 0;
 	snake = [];
 	
@@ -162,12 +171,14 @@ function resetSnake()
 
 function initSnake()
 {
-	snake.push( new THREE.Mesh( BoxGeometry, CubeMaterial ) );
+	snake[0] = new THREE.Mesh( BoxGeometry, CubeMaterial );
 	snake[0].pos = new Position( 0, 0 );
 	grid[0][0] = GridState.SNAKE;
 	snake.literaldir = Direction.NORTH;
 	updateDirection();
 	scene.add( snake[0] );
+	
+	camera.position.set( 0, CAMERA_HEAD_Y_OFFSET, 0 );
 	
 	addScore();
 	
