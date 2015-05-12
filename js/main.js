@@ -81,6 +81,7 @@ var snake = []; // snake body parts in meshes with an Position, for the grid
 var grid = []; // grid for all states for easy state checking and position calculating... etc.
 var food;
 
+var blockGoingFaster = false;
 var gameover = false;
 var delta;
 var timeSinceLastSnakeUpdate = 0.0;
@@ -96,6 +97,7 @@ function init()
 {
 	window.addEventListener  ( 'resize' , onWindowResize, false );
 	document.addEventListener( 'keydown', onKeyDown, false );
+	document.addEventListener( 'keyup'  , onKeyUp, false );
 	
 	clock = new THREE.Clock();
 	
@@ -152,9 +154,10 @@ function resetSnake()
 		}
 	}
 	
-	snake.dir = undefined;
 	score = 0;
 	snake = [];
+	
+	initSnake();
 }
 
 function initSnake()
@@ -255,24 +258,49 @@ function onWindowResize()
 // input handling
 function onKeyDown( e )
 {
+	if (gameover)
+	{
+		switch (e.keyCode)
+		{
+			case 82: // r
+				toggleGameOver();
+				resetSnake();
+				break;
+		}
+	}
+	else
+	{
+		switch (e.keyCode)
+		{
+			case 38: // up
+			case 87: // w
+				if (!blockGoingFaster)
+				{
+					blockGoingFaster = true;
+					timeSinceLastSnakeUpdate = 0.7;
+				}
+				break;
+			
+			case 37: // left
+			case 65: // a
+				changeRelativeDirection( Direction.EAST );
+				break;
+			
+			case 39: // right
+			case 68: // d
+				changeRelativeDirection( Direction.WEST );
+				break;
+		}
+	}
+}
+
+function onKeyUp( e )
+{
 	switch (e.keyCode)
 	{
 		case 38: // up
 		case 87: // w
-			// Dear javascript,
-			// I really hate that I can't check if a key is down manually or not.
-			// This is a crap method.
-			timeSinceLastSnakeUpdate += 25 * delta;
-			break;
-		
-		case 37: // left
-		case 65: // a
-			changeRelativeDirection( Direction.EAST );
-			break;
-		
-		case 39: // right
-		case 68: // d
-			changeRelativeDirection( Direction.WEST );
+			blockGoingFaster = false;
 			break;
 	}
 }
@@ -288,11 +316,7 @@ function animate()
 {
 	requestAnimationFrame( animate );
 	
-	if (gameover)
-	{
-		
-	}
-	else
+	if (!gameover)
 	{
 		update();
 	}
@@ -303,9 +327,9 @@ function animate()
 
 function updateSnake()
 {
-	if ((timeSinceLastSnakeUpdate += delta) >= 0.7)
+	while ((timeSinceLastSnakeUpdate += delta) >= 0.7)
 	{
-		timeSinceLastSnakeUpdate = 0.0;
+		timeSinceLastSnakeUpdate -= 0.7;
 		
 		var prevPos = snake[0].pos;
 		var newPos = prevPos.added( snake.dir );
