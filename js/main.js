@@ -400,13 +400,13 @@ function toggleGameOver()
 	
 	if (gameover)
 	{
-		$( "gameover" ).display = "visible";
-		$( "resetmessage" ).display = "visible";
+		$( "gameover" ).style.display = "inline";
+		$( "resetmessage" ).style.display = "inline";
 	}
 	else
 	{
-		$( "gameover" ).display = "none";
-		$( "resetmessage" ).display = "none";
+		$( "gameover" ).style.display = "none";
+		$( "resetmessage" ).style.display = "none";
 	}
 }
 
