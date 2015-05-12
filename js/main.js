@@ -73,11 +73,15 @@ var FIELD_SIZE = 10;
 var CUBE_SIZE = 10;
 var CAMERA_HEAD_Y_OFFSET = 11;
 
+var BoxGeometry = new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE );
+var CubeMaterial = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
+
 var delta; // time since last update in seconds
 var snake = []; // snake body parts in meshes with an Position, for the grid
 var grid = []; // grid for all states for easy state checking and position calculating... etc.
 var food;
 
+var gameover = false;
 var delta;
 var timeSinceLastSnakeUpdate = 0.0;
 
@@ -97,9 +101,6 @@ function init()
 	
 	scene = new THREE.Scene();
 	scene.fog = new THREE.Fog( 0x0000aa, 10, 1000 );
-	
-	var BoxGeometry = new THREE.BoxGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE );
-	var CubeMaterial = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
 
 	var light = new THREE.AmbientLight( /*0x404040*/ 0x919191 ); // soft white light
 	scene.add( light );
@@ -126,6 +127,38 @@ function init()
 	camera.position.y = CAMERA_HEAD_Y_OFFSET;
 	scene.add( camera );
 
+	food = new THREE.Mesh(
+		BoxGeometry,
+		new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
+	);
+	
+	initSnake();
+	scene.add( food );
+	
+	document.body.appendChild( renderer.domElement );
+	
+	clock.start();
+	
+	animate();
+}
+
+function resetSnake()
+{
+	for (var i = 0; i < FIELD_SIZE; i++)
+	{
+		for (var j = 0; j < FIELD_SIZE; j++)
+		{
+			grid[i][j] = GridState.EMPTY;
+		}
+	}
+	
+	snake.dir = undefined;
+	score = 0;
+	snake = [];
+}
+
+function initSnake()
+{
 	snake.push( new THREE.Mesh( BoxGeometry, CubeMaterial ) );
 	snake[0].pos = new Position( 0, 0 );
 	grid[0][0] = GridState.SNAKE;
@@ -135,20 +168,10 @@ function init()
 	
 	addScore();
 	
-	food = new THREE.Mesh(
-		BoxGeometry,
-		new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
-	);
-	
 	addFood();
-	scene.add( food );
-	
-	document.body.appendChild( renderer.domElement );
-	
-	clock.start();
-	
-	animate();
 }
+
+
 
 function addFood()
 {
@@ -265,13 +288,19 @@ function animate()
 {
 	requestAnimationFrame( animate );
 	
-	update();
+	if (gameover)
+	{
+		
+	}
+	else
+	{
+		update();
+	}
 	
 	renderer.render( scene, camera );
 }
 
 
-// TODO: Implement
 function updateSnake()
 {
 	if ((timeSinceLastSnakeUpdate += delta) >= 0.7)
@@ -294,7 +323,7 @@ function updateSnake()
 			
 			case GridState.SNAKE: // Die
 				
-				// TODO: Gameover/reset
+				toggleGameOver();
 				
 				break;
 			
@@ -362,6 +391,23 @@ function adjustToField( pos )
 function addScore()
 {
 	$( "score" ).innerHTML = "Score: " + ++score;
+}
+
+// Toggles gamover & ui
+function toggleGameOver()
+{
+	gameover = !gameover;
+	
+	if (gameover)
+	{
+		$( "gameover" ).display = "visible";
+		$( "resetmessage" ).display = "visible";
+	}
+	else
+	{
+		$( "gameover" ).display = "none";
+		$( "resetmessage" ).display = "none";
+	}
 }
 
 window.onload = init;

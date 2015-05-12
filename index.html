@@ -13,6 +13,12 @@ Source: https://github.com/joppiesaus/fps-snake
 		margin: 0;
 		overflow: hidden;
 	}
+	.center
+	{
+		position: fixed;
+		transform: translate(-50%, -50%);
+		left: 50%;
+	}
 	#score
 	{
 		font-weight: bold;
@@ -20,10 +26,24 @@ Source: https://github.com/joppiesaus/fps-snake
 		top: 20px;
 		left: 20px;
 	}
+	#gameover
+	{
+		display: none;
+		font-weight: bold;
+		font-size: 50pt;
+		top: 30%;
+	}
+	#resetmessage
+	{
+		display: none;
+		top: 70%;
+	}
 	</style>
 </head>
 <body>
 	<span id="score"></span>
+	<span class="center" id="gameover"><p>GAME OVER</p></span>
+	<span class="center" id="resetmessage"><p>Press R to reset</p></span>
 	<script src="js/main.js"></script>
 </body>
 </html>
