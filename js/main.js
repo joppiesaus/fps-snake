@@ -11,15 +11,15 @@ TODO:
 // An int vector2, point.
 var Position = function(x, y)
 {
-    this.x = x;
-    this.y = y;
+	this.x = x;
+	this.y = y;
 };
 
 // Adds another Position to this position
 Position.prototype.add = function(a)
 {
-    this.x = a.x;
-    this.y = a.y;
+	this.x = a.x;
+	this.y = a.y;
 };
 Position.prototype.added = function(a)
 {
@@ -32,13 +32,13 @@ Position.prototype.added = function(a)
 // Returns true if free, otherwise occupied
 Position.prototype.isFree = function()
 {
-    return grid[this.x][this.y] === GridState.EMPTY;
+	return grid[this.x][this.y] === GridState.EMPTY;
 };
 
 // Returns the real-world coordinates of this position
 Position.prototype.toWorldVector = function()
 {
-    return new THREE.Vector3( this.x * CUBE_SIZE, 0, this.y * CUBE_SIZE );
+	return new THREE.Vector3( this.x * CUBE_SIZE, 0, this.y * CUBE_SIZE );
 };
 
 
@@ -113,13 +113,13 @@ function init()
 
 	// Init field
 	for (var i = 0; i < FIELD_SIZE; i++)
-    {
-        grid[i] = [];
-        for (var j = 0; j < FIELD_SIZE; j++)
-        {
-            grid[i][j] = GridState.EMPTY;
+	{
+		grid[i] = [];
+		for (var j = 0; j < FIELD_SIZE; j++)
+		{
+			grid[i][j] = GridState.EMPTY;
 		}
-    }
+	}
 	
 	// camera
 	camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -135,10 +135,11 @@ function init()
 	
 	addScore();
 	
-    food = new THREE.Mesh(
-			BoxGeometry,
-			new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
-    );
+	food = new THREE.Mesh(
+		BoxGeometry,
+		new THREE.MeshLambertMaterial( { color: 0x00ff00 } )
+	);
+	
 	addFood();
 	scene.add( food );
 	
@@ -151,20 +152,20 @@ function init()
 
 function addFood()
 {
-    var pos;
+	var pos;	
 	
 	// Pick random spot, check if space for food
 	// If not, try again
-    do
-    {
-        pos = new Position( randomInt( 0, FIELD_SIZE ), randomInt( 0, FIELD_SIZE ) );
-    }
-    while (!pos.isFree());
+	do
+	{
+		pos = new Position( randomInt( 0, FIELD_SIZE ), randomInt( 0, FIELD_SIZE ) );
+	}
+	while (!pos.isFree());
 	
 	grid[pos.x][pos.y] = GridState.FOOD;
 	
 	pos = pos.toWorldVector(); // ! Changes type !
-    food.position.set( pos.x, pos.y, pos.z ); // .set doesn't work with a Vector3
+	food.position.set( pos.x, pos.y, pos.z ); // .set doesn't work with a Vector3
 }
 
 // changes literaldir relatively
