@@ -154,7 +154,12 @@ function init()
 }
 
 function resetSnake()
-{	
+{
+	for (var i = 0; i < snake.length; i++)
+	{
+		scene.remove( snake[i] );
+	}
+
 	for (var i = 0; i < FIELD_SIZE; i++)
 	{
 		for (var j = 0; j < FIELD_SIZE; j++)
