@@ -69,6 +69,7 @@ var randomInt = function(min, max)
 var score = 0;
 var scene, camera, renderer, clock;
 
+var UPDATE_TIME = 0.65;
 var FIELD_SIZE = 10;
 var CUBE_SIZE = 10;
 var CAMERA_HEAD_Y_OFFSET = 11;
@@ -288,7 +289,7 @@ function onKeyDown( e )
 				if (!blockGoingFaster)
 				{
 					blockGoingFaster = true;
-					timeSinceLastSnakeUpdate = 0.7;
+					timeSinceLastSnakeUpdate = UPDATE_TIME;
 				}
 				break;
 			
@@ -320,17 +321,17 @@ function update()
 {
 	delta = clock.getDelta();
 	
-	updateSnake();
+	if (!gameover)
+	{
+		updateSnake();
+	}
 }
 
 function animate()
 {
 	requestAnimationFrame( animate );
 	
-	if (!gameover)
-	{
-		update();
-	}
+	update();
 	
 	renderer.render( scene, camera );
 }
@@ -338,9 +339,10 @@ function animate()
 
 function updateSnake()
 {
-	while ((timeSinceLastSnakeUpdate += delta) >= 0.7)
+	timeSinceLastSnakeUpdate += delta;
+	while (timeSinceLastSnakeUpdate >= UPDATE_TIME)
 	{
-		timeSinceLastSnakeUpdate -= 0.7;
+		timeSinceLastSnakeUpdate -= UPDATE_TIME;
 		
 		var prevPos = snake[0].pos;
 		var newPos = prevPos.added( snake.dir );
